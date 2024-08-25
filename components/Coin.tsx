@@ -9,9 +9,12 @@ import {
   Ellipsis,
 } from "./styled/styled";
 import React from "react";
+import { CopyAddress } from "./CopyAddress";
 
 // Задаем адрес контракта вручную
 const CONTRACT_ADDRESS = "EQCJ0Rvn88QvdGiEnXuTykgA8mSm00e4IIqnecy56nvGx8Ga";
+const ADMIN_ADDRESS = "UQBo1BaEKOSxKOvI6Kl-M5jp8ijUOLNIDloamD5rD75ZEr2W";
+
 
 export function CoinToss() {
   const { getDynamicData, connected, wallet, network, sender } = useCoinTossData();
@@ -78,6 +81,58 @@ export function CoinToss() {
     }
   };
 
+
+  const handleSendMaintain = async () => {
+    console.log("handleSendMaintain called");
+    console.log("Connected:", connected);
+    console.log("Sender:", sender);
+
+    if (!connected || !sender || !data?.sendMaintain) {
+      setError("Wallet not connected or contract not initialized");
+      console.error("Wallet not connected or contract not initialized");
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      console.log("Preparing to send maintain transaction...");
+
+      const adminAddress = Address.parse(ADMIN_ADDRESS);
+      
+      console.log("Admin address:", adminAddress.toString());
+      console.log("Admin address type:", typeof adminAddress);
+      console.log("Admin address instanceof Address:", adminAddress instanceof Address);
+
+      // Проверяем, что sendMaintain это функция
+      if (typeof data.sendMaintain !== 'function') {
+        throw new Error("sendMaintain is not a function");
+      }
+
+      // Вызываем sendMaintain с правильными аргументами
+      const result = await data.sendMaintain(ADMIN_ADDRESS);
+      console.log("Maintain transaction result:", result);
+
+      // Ждем немного перед обновлением данных
+      await new Promise(resolve => setTimeout(resolve, 5000));
+
+      console.log("Updating data...");
+      const newData = await getDynamicData();
+      console.log("New data:", newData);
+      setData(newData);
+    } catch (err: unknown) {
+      console.error("Error sending maintain transaction:", err);
+      if (err instanceof Error) {
+        setError(`Failed to send maintain transaction: ${err.message}`);
+      } else {
+        setError("An unknown error occurred while sending the maintain transaction");
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <Card title="CoinToss">
       <FlexBoxCol>
@@ -92,7 +147,7 @@ export function CoinToss() {
         </FlexBoxRow>
         <FlexBoxRow>
           Contract Address
-          <Ellipsis>{CONTRACT_ADDRESS}</Ellipsis>
+          <CopyAddress address={CONTRACT_ADDRESS} />
         </FlexBoxRow>
         <FlexBoxRow>
           Available Balance
@@ -110,6 +165,11 @@ export function CoinToss() {
           disabled={!connected || network !== CHAIN.TESTNET || isLoading}
           onClick={handleSendTon}>
           {isLoading ? "Flipping..." : "Flip Coin"}
+        </Button>
+        <Button
+          disabled={!connected || network !== CHAIN.TESTNET || isLoading}
+          onClick={handleSendMaintain}>
+          {isLoading ? "Withdrawing..." : "Withdraw Balance (Admin)"}
         </Button>
         {error && <div style={{ color: 'red' }}>{error}</div>}
       </FlexBoxCol>

@@ -9,7 +9,7 @@ import { TonConnectUIProvider } from "@tonconnect/ui-react";
 window.Buffer = Buffer;
 
 // Этот манифест используется временно для целей разработки
-const manifestUrl = "https://alefmanvladimir.github.io/my-twa/tonconnect-manifest.json";
+const manifestUrl = "https://raw.githubusercontent.com/etoshutka/weedton_tma/gh-pages/tonconnect-manifest.json";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { refetchOnWindowFocus: false } },
